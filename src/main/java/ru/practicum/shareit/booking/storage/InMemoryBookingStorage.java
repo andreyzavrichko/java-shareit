@@ -28,7 +28,7 @@ public class InMemoryBookingStorage implements BookingStorage {
     public List<Booking> findByBookerId(Long bookerId, BookingStatus status) {
         return bookings.values().stream()
                 .filter(b -> b.getBooker().getId().equals(bookerId))
-                .filter(b -> status == null || b.getStatus() == status)
+                .filter(b -> status == BookingStatus.ALL || b.getStatus() == status)
                 .sorted(Comparator.comparing(Booking::getStart).reversed())
                 .collect(Collectors.toList());
     }
@@ -37,7 +37,7 @@ public class InMemoryBookingStorage implements BookingStorage {
     public List<Booking> findByOwnerId(Long ownerId, BookingStatus status) {
         return bookings.values().stream()
                 .filter(b -> b.getItem().getOwner().getId().equals(ownerId))
-                .filter(b -> status == null || b.getStatus() == status)
+                .filter(b -> status == BookingStatus.ALL || b.getStatus() == status)
                 .sorted(Comparator.comparing(Booking::getStart).reversed())
                 .collect(Collectors.toList());
     }

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingShortDto;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.config.HeaderConstants;
 
 import java.util.List;
 
@@ -17,14 +18,14 @@ public class BookingController {
 
     @PostMapping
     public BookingDto create(
-            @RequestHeader("X-Sharer-User-Id") Long bookerId,
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long bookerId,
             @Valid @RequestBody BookingShortDto dto) {
         return bookingService.create(bookerId, dto);
     }
 
     @PatchMapping("/{bookingId}")
     public BookingDto approve(
-            @RequestHeader("X-Sharer-User-Id") Long ownerId,
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long ownerId,
             @PathVariable Long bookingId,
             @RequestParam Boolean approved) {
         return bookingService.approve(ownerId, bookingId, approved);
@@ -32,21 +33,21 @@ public class BookingController {
 
     @GetMapping("/{bookingId}")
     public BookingDto getById(
-            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long userId,
             @PathVariable Long bookingId) {
         return bookingService.getById(userId, bookingId);
     }
 
     @GetMapping
     public List<BookingDto> getByBooker(
-            @RequestHeader("X-Sharer-User-Id") Long bookerId,
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long bookerId,
             @RequestParam(defaultValue = "ALL") String state) {
         return bookingService.getByBooker(bookerId, state);
     }
 
     @GetMapping("/owner")
     public List<BookingDto> getByOwner(
-            @RequestHeader("X-Sharer-User-Id") Long ownerId,
+            @RequestHeader(HeaderConstants.X_SHARER_USER_ID) Long ownerId,
             @RequestParam(defaultValue = "ALL") String state) {
         return bookingService.getByOwner(ownerId, state);
     }

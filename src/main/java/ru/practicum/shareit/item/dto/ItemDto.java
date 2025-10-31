@@ -25,6 +25,6 @@ public class ItemDto {
 
     private Long requestId;
 
-    private BookingShort lastBooking;
-    private BookingShort nextBooking;
+    private BookingShortDto lastBooking;
+    private BookingShortDto nextBooking;
 }

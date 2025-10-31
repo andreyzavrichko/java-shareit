@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookingShort {
+public class BookingShortDto {
     private Long id;
     private Long bookerId;
 }

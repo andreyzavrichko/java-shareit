@@ -102,11 +102,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingStatus parseState(String state) {
-        if (state == null || state.equals("ALL")) return null;
+        if (state == null || state.isBlank() || "ALL".equalsIgnoreCase(state)) {
+            return BookingStatus.ALL;
+        }
         try {
             return BookingStatus.valueOf(state.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Неизвестное состояние: " + state);
+            throw new IllegalArgumentException("Неизвестный статус " + state);
         }
     }
 
