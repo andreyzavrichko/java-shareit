@@ -11,10 +11,7 @@ import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingRepository;
-import ru.practicum.shareit.exception.BookingAlreadyProcessedException;
-import ru.practicum.shareit.exception.ForbiddenException;
-import ru.practicum.shareit.exception.ItemNotAvailableException;
-import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -90,14 +87,25 @@ public class BookingServiceImpl implements BookingService {
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
 
-        return (switch (state) {
-            case ALL -> bookingRepository.findByBookerId(bookerId, sort);
-            case CURRENT -> bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, now, now, sort);
-            case PAST -> bookingRepository.findByBookerIdAndEndBefore(bookerId, now, sort);
-            case FUTURE -> bookingRepository.findByBookerIdAndStartAfter(bookerId, now, sort);
-            case WAITING -> bookingRepository.findByBookerIdAndStatus(bookerId, BookingStatus.WAITING, sort);
-            case REJECTED -> bookingRepository.findByBookerIdAndStatus(bookerId, BookingStatus.REJECTED, sort);
-        }).reversed().stream()
+        List<Booking> bookings;
+
+        if (state == null || state == BookingState.ALL) {
+            bookings = bookingRepository.findByBookerId(bookerId, sort);
+        } else if (state == BookingState.CURRENT) {
+            bookings = bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, now, now, sort);
+        } else if (state == BookingState.PAST) {
+            bookings = bookingRepository.findByBookerIdAndEndBefore(bookerId, now, sort);
+        } else if (state == BookingState.FUTURE) {
+            bookings = bookingRepository.findByBookerIdAndStartAfter(bookerId, now, sort);
+        } else if (state == BookingState.WAITING) {
+            bookings = bookingRepository.findByBookerIdAndStatus(bookerId, BookingStatus.WAITING, sort);
+        } else if (state == BookingState.REJECTED) {
+            bookings = bookingRepository.findByBookerIdAndStatus(bookerId, BookingStatus.REJECTED, sort);
+        } else {
+            throw new UnsupportedStateException("Unknown state: " + state);
+        }
+
+        return bookings.reversed().stream()
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
     }
@@ -108,14 +116,25 @@ public class BookingServiceImpl implements BookingService {
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
 
-        return (switch (state) {
-            case ALL -> bookingRepository.findByItem_Owner_Id(ownerId, sort);
-            case CURRENT -> bookingRepository.findByItem_Owner_IdAndStartBeforeAndEndAfter(ownerId, now, now, sort);
-            case PAST -> bookingRepository.findByItem_Owner_IdAndEndBefore(ownerId, now, sort);
-            case FUTURE -> bookingRepository.findByItem_Owner_IdAndStartAfter(ownerId, now, sort);
-            case WAITING -> bookingRepository.findByItem_Owner_IdAndStatus(ownerId, BookingStatus.WAITING, sort);
-            case REJECTED -> bookingRepository.findByItem_Owner_IdAndStatus(ownerId, BookingStatus.REJECTED, sort);
-        }).reversed().stream()
+        List<Booking> bookings;
+
+        if (state == null || state == BookingState.ALL) {
+            bookings = bookingRepository.findByItem_Owner_Id(ownerId, sort);
+        } else if (state == BookingState.CURRENT) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStartBeforeAndEndAfter(ownerId, now, now, sort);
+        } else if (state == BookingState.PAST) {
+            bookings = bookingRepository.findByItem_Owner_IdAndEndBefore(ownerId, now, sort);
+        } else if (state == BookingState.FUTURE) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStartAfter(ownerId, now, sort);
+        } else if (state == BookingState.WAITING) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStatus(ownerId, BookingStatus.WAITING, sort);
+        } else if (state == BookingState.REJECTED) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStatus(ownerId, BookingStatus.REJECTED, sort);
+        } else {
+            throw new UnsupportedStateException("Unknown state: " + state);
+        }
+
+        return bookings.reversed().stream()
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
     }
