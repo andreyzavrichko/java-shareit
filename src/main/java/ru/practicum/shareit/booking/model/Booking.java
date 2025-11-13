@@ -1,38 +1,41 @@
 package ru.practicum.shareit.booking.model;
 
-import jakarta.validation.constraints.FutureOrPresent;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.booking.dto.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "bookings")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Booking {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Дата начала обязательна")
-    @FutureOrPresent(message = "Дата начала не может быть в прошлом")
+    @Column(name = "start_date", nullable = false)
     private LocalDateTime start;
 
-    @NotNull(message = "Дата окончания обязательна")
-    @FutureOrPresent(message = "Дата окончания не может быть в прошлом")
+    @Column(name = "end_date", nullable = false)
     private LocalDateTime end;
 
-    @NotNull(message = "Вещь обязательна")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @NotNull(message = "Букер обязателен")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booker_id", nullable = false)
     private User booker;
 
-    @NotNull(message = "Статус обязателен")
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private BookingStatus status;
 }
