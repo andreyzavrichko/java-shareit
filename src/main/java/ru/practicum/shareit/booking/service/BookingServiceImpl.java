@@ -90,7 +90,7 @@ public class BookingServiceImpl implements BookingService {
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
 
-        return (switch (state) {
+        return ( switch (state) {
             case ALL -> bookingRepository.findByBookerId(bookerId, sort);
             case CURRENT -> bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, now, now, sort);
             case PAST -> bookingRepository.findByBookerIdAndEndBefore(bookerId, now, sort);
@@ -108,7 +108,7 @@ public class BookingServiceImpl implements BookingService {
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         LocalDateTime now = LocalDateTime.now();
 
-        return (switch (state) {
+        return ( switch (state) {
             case ALL -> bookingRepository.findByItem_Owner_Id(ownerId, sort);
             case CURRENT -> bookingRepository.findByItem_Owner_IdAndStartBeforeAndEndAfter(ownerId, now, now, sort);
             case PAST -> bookingRepository.findByItem_Owner_IdAndEndBefore(ownerId, now, sort);
