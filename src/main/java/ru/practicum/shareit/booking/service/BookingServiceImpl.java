@@ -68,7 +68,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        return toBookingDto(bookingRepository.save(booking));
+        return toBookingDto(booking);
     }
 
     @Override

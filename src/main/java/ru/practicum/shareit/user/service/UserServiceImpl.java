@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -14,9 +15,11 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public UserDto create(UserDto userDto) {
         if (userRepository.existsByEmail(userDto.getEmail())) {
@@ -26,6 +29,7 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toUserDto(userRepository.save(user));
     }
 
+    @Transactional
     @Override
     public UserDto update(Long id, UserDto userDto) {
         User user = userRepository.findById(id)
@@ -58,6 +62,7 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     @Override
     public void delete(Long id) {
         if (!userRepository.existsById(id)) {
