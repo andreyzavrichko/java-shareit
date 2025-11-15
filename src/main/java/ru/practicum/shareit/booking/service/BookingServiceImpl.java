@@ -1,46 +1,48 @@
 package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.BookingShortDto;
-import ru.practicum.shareit.booking.dto.BookingStatus;
+import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.storage.BookingStorage;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.storage.BookingRepository;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.shareit.booking.mapper.BookingMapper.toBookingDto;
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
-    private final BookingStorage bookingStorage;
-    private final UserStorage userStorage;
-    private final ItemStorage itemStorage;
 
+    private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
+
+    @Transactional
     @Override
-    public BookingDto create(Long bookerId, BookingShortDto dto) {
-        User booker = getUser(bookerId);
+    public BookingDto create(Long userId, BookingCreateDto dto) {
+        User booker = getUser(userId);
         Item item = getItem(dto.getItemId());
 
         if (!item.getAvailable()) {
-            throw new IllegalStateException("Вещь недоступна для букинга");
+            throw new ItemNotAvailableException("Вещь недоступна для бронирования");
         }
-        if (item.getOwner().getId().equals(bookerId)) {
-            throw new IllegalStateException("Владелец не может забронировать свой собственный товар");
-        }
-
-
-        if (bookingStorage.findByItemId(item.getId()).stream()
-                .anyMatch(b -> b.getStatus() == BookingStatus.APPROVED &&
-                        isOverlap(dto.getStart(), dto.getEnd(), b.getStart(), b.getEnd()))) {
-            throw new IllegalStateException("Вещь была зарезервирована на эти даты");
+        if (item.getOwner().getId().equals(userId)) {
+            throw new ForbiddenException("Владелец не может бронировать свою вещь");
         }
 
         Booking booking = Booking.builder()
@@ -51,83 +53,104 @@ public class BookingServiceImpl implements BookingService {
                 .status(BookingStatus.WAITING)
                 .build();
 
-        return BookingMapper.toBookingDto(bookingStorage.save(booking));
+        return toBookingDto(bookingRepository.save(booking));
     }
 
+    @Transactional
     @Override
-    public BookingDto approve(Long ownerId, Long bookingId, Boolean approved) {
+    public BookingDto approve(Long userId, Long bookingId, Boolean approved) {
         Booking booking = getBooking(bookingId);
-        Item item = booking.getItem();
-
-        if (!item.getOwner().getId().equals(ownerId)) {
-            throw new IllegalStateException("Только владелец может принять букинг");
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
+            throw new ForbiddenException("Только владелец может подтвердить бронирование");
         }
         if (booking.getStatus() != BookingStatus.WAITING) {
-            throw new IllegalStateException("Букинг уже в процессе");
+            throw new BookingAlreadyProcessedException("Бронирование уже обработано");
         }
 
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        return BookingMapper.toBookingDto(bookingStorage.save(booking));
+        return toBookingDto(booking);
     }
 
     @Override
     public BookingDto getById(Long userId, Long bookingId) {
+        getUser(userId);
         Booking booking = getBooking(bookingId);
-        Long ownerId = booking.getItem().getOwner().getId();
-        Long bookerId = booking.getBooker().getId();
-
-        if (!ownerId.equals(userId) && !bookerId.equals(userId)) {
-            throw new IllegalStateException("Пользователь не имеет доступ");
+        if (!booking.getBooker().getId().equals(userId) && !booking.getItem().getOwner().getId().equals(userId)) {
+            throw new ForbiddenException("Доступ только автору или владельцу");
         }
-
-        return BookingMapper.toBookingDto(booking);
+        return toBookingDto(booking);
     }
 
     @Override
-    public List<BookingDto> getByBooker(Long bookerId, String state) {
+    public List<BookingDto> getAllByBooker(Long bookerId, BookingState state) {
         getUser(bookerId);
-        BookingStatus status = parseState(state);
-        return bookingStorage.findByBookerId(bookerId, status).stream()
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Booking> bookings;
+
+        if (state == null || state == BookingState.ALL) {
+            bookings = bookingRepository.findByBookerId(bookerId, sort);
+        } else if (state == BookingState.CURRENT) {
+            bookings = bookingRepository.findByBookerIdAndStartBeforeAndEndAfter(bookerId, now, now, sort);
+        } else if (state == BookingState.PAST) {
+            bookings = bookingRepository.findByBookerIdAndEndBefore(bookerId, now, sort);
+        } else if (state == BookingState.FUTURE) {
+            bookings = bookingRepository.findByBookerIdAndStartAfter(bookerId, now, sort);
+        } else if (state == BookingState.WAITING) {
+            bookings = bookingRepository.findByBookerIdAndStatus(bookerId, BookingStatus.WAITING, sort);
+        } else if (state == BookingState.REJECTED) {
+            bookings = bookingRepository.findByBookerIdAndStatus(bookerId, BookingStatus.REJECTED, sort);
+        } else {
+            throw new UnsupportedStateException("Unknown state: " + state);
+        }
+
+        return bookings.reversed().stream()
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<BookingDto> getByOwner(Long ownerId, String state) {
+    public List<BookingDto> getAllByOwner(Long ownerId, BookingState state) {
         getUser(ownerId);
-        BookingStatus status = parseState(state);
-        return bookingStorage.findByOwnerId(ownerId, status).stream()
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Booking> bookings;
+
+        if (state == null || state == BookingState.ALL) {
+            bookings = bookingRepository.findByItem_Owner_Id(ownerId, sort);
+        } else if (state == BookingState.CURRENT) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStartBeforeAndEndAfter(ownerId, now, now, sort);
+        } else if (state == BookingState.PAST) {
+            bookings = bookingRepository.findByItem_Owner_IdAndEndBefore(ownerId, now, sort);
+        } else if (state == BookingState.FUTURE) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStartAfter(ownerId, now, sort);
+        } else if (state == BookingState.WAITING) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStatus(ownerId, BookingStatus.WAITING, sort);
+        } else if (state == BookingState.REJECTED) {
+            bookings = bookingRepository.findByItem_Owner_IdAndStatus(ownerId, BookingStatus.REJECTED, sort);
+        } else {
+            throw new UnsupportedStateException("Unknown state: " + state);
+        }
+
+        return bookings.reversed().stream()
                 .map(BookingMapper::toBookingDto)
                 .collect(Collectors.toList());
-    }
-
-    private BookingStatus parseState(String state) {
-        if (state == null || state.isBlank() || "ALL".equalsIgnoreCase(state)) {
-            return BookingStatus.ALL;
-        }
-        try {
-            return BookingStatus.valueOf(state.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Неизвестный статус " + state);
-        }
-    }
-
-    private boolean isOverlap(LocalDateTime start1, LocalDateTime end1, LocalDateTime start2, LocalDateTime end2) {
-        return !start1.isAfter(end2) && !end1.isBefore(start2);
     }
 
     private User getUser(Long id) {
-        return userStorage.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Пользователь не найден: " + id));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден: " + id));
     }
 
     private Item getItem(Long id) {
-        return itemStorage.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Вещь не найдена: " + id));
+        return itemRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Вещь не найдена: " + id));
     }
 
     private Booking getBooking(Long id) {
-        return bookingStorage.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Букинг не найден: " + id));
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Бронирование не найдено: " + id));
     }
 }

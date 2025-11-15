@@ -1,30 +1,32 @@
 package ru.practicum.shareit.request.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 
-@Data
+@Entity
+@Table(name = "requests")
+@Getter
+@Setter
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemRequest {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Описание запроса не может быть пустым")
+    @Column(nullable = false, length = 1024)
     private String description;
 
-    @NotNull(message = "Создатель запроса обязателен")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "requestor_id", nullable = false)
     private User requestor;
 
-    @NotNull(message = "Дата создания обязательна")
-    @PastOrPresent(message = "Дата создания не может быть в будущем")
+    @Column(nullable = false)
     private LocalDateTime created;
 }
