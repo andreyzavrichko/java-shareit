@@ -44,7 +44,7 @@ class DtoValidationJsonTest {
                     {
                     "name": "   ",
                     "email": "john@example.com"
-                }
+                    }
                 """;
 
         UserDto dto = userJson.parseObject(json);
@@ -61,7 +61,7 @@ class DtoValidationJsonTest {
                     {
                     "name": "John",
                     "email": "not-an-email"
-                }
+                    }
                 """;
 
         UserDto dto = userJson.parseObject(json);
@@ -80,7 +80,7 @@ class DtoValidationJsonTest {
                     "name": "",
                     "description": "Хорошая дрель",
                     "available": true
-                }
+                    }
                 """;
 
         ItemDto dto = itemJson.parseObject(json);
@@ -98,7 +98,7 @@ class DtoValidationJsonTest {
                     "name": "Дрель",
                     "description": "Мощная",
                     "available": null
-                }
+                    }
                 """;
 
         ItemDto dto = itemJson.parseObject(json);
@@ -117,7 +117,7 @@ class DtoValidationJsonTest {
                     "itemId": 1,
                     "start": "%s",
                     "end": "%s"
-                }
+                    }
                 """.formatted(tomorrow, now);
 
         BookingCreateDto dto = bookingJson.parseObject(json);
@@ -135,7 +135,7 @@ class DtoValidationJsonTest {
                     "itemId": null,
                     "start": "%s",
                     "end": "%s"
-                }
+                    }
                 """.formatted(tomorrow, tomorrow.plusDays(1));
 
         BookingCreateDto dto = bookingJson.parseObject(json);
@@ -154,7 +154,7 @@ class DtoValidationJsonTest {
                     "itemId": 999,
                     "start": "%s",
                     "end": "%s"
-                }
+                    }
                 """.formatted(tomorrow, tomorrow.plusDays(1));
 
         BookingCreateDto dto = bookingJson.parseObject(json);
