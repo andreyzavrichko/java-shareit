@@ -37,15 +37,9 @@ class DtoValidationJsonTest {
     private final LocalDateTime now = LocalDateTime.now();
     private final LocalDateTime tomorrow = now.plusDays(1);
 
-
     @Test
     void userDtoBlankNameShouldHaveViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "name": "   ",
-                    "email": "john@example.com"
-                    }
-                """;
+        String json = "{ \"name\": \"   \", \"email\": \"john@example.com\" }";
 
         UserDto dto = userJson.parseObject(json);
 
@@ -57,12 +51,7 @@ class DtoValidationJsonTest {
 
     @Test
     void userDtoInvalidEmailShouldHaveViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "name": "John",
-                    "email": "not-an-email"
-                    }
-                """;
+        String json = "{ \"name\": \"John\", \"email\": \"not-an-email\" }";
 
         UserDto dto = userJson.parseObject(json);
 
@@ -72,16 +61,9 @@ class DtoValidationJsonTest {
                 .contains("Email должен быть валидным");
     }
 
-
     @Test
     void itemDtoBlankNameShouldHaveViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "name": "",
-                    "description": "Хорошая дрель",
-                    "available": true
-                    }
-                """;
+        String json = "{ \"name\": \"\", \"description\": \"Хорошая дрель\", \"available\": true }";
 
         ItemDto dto = itemJson.parseObject(json);
 
@@ -93,13 +75,7 @@ class DtoValidationJsonTest {
 
     @Test
     void itemDtoNullAvailableShouldHaveViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "name": "Дрель",
-                    "description": "Мощная",
-                    "available": null
-                    }
-                """;
+        String json = "{ \"name\": \"Дрель\", \"description\": \"Мощная\", \"available\": null }";
 
         ItemDto dto = itemJson.parseObject(json);
 
@@ -109,16 +85,9 @@ class DtoValidationJsonTest {
                 .contains("available");
     }
 
-
     @Test
     void bookingCreateDtoEndNotInFutureShouldHaveViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "itemId": 1,
-                    "start": "%s",
-                    "end": "%s"
-                    }
-                """.formatted(tomorrow, now);
+        String json = "{ \"itemId\": 1, \"start\": \"" + tomorrow + "\", \"end\": \"" + now + "\" }";
 
         BookingCreateDto dto = bookingJson.parseObject(json);
 
@@ -130,13 +99,7 @@ class DtoValidationJsonTest {
 
     @Test
     void bookingCreateDtoNullItemIdShouldHaveViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "itemId": null,
-                    "start": "%s",
-                    "end": "%s"
-                    }
-                """.formatted(tomorrow, tomorrow.plusDays(1));
+        String json = "{ \"itemId\": null, \"start\": \"" + tomorrow + "\", \"end\": \"" + tomorrow.plusDays(1) + "\" }";
 
         BookingCreateDto dto = bookingJson.parseObject(json);
 
@@ -146,16 +109,9 @@ class DtoValidationJsonTest {
                 .contains("itemId");
     }
 
-
     @Test
     void validBookingCreateDtoShouldHaveNoViolationsTest() throws Exception {
-        String json = """
-                    {
-                    "itemId": 999,
-                    "start": "%s",
-                    "end": "%s"
-                    }
-                """.formatted(tomorrow, tomorrow.plusDays(1));
+        String json = "{ \"itemId\": 999, \"start\": \"" + tomorrow + "\", \"end\": \"" + tomorrow.plusDays(1) + "\" }";
 
         BookingCreateDto dto = bookingJson.parseObject(json);
 
