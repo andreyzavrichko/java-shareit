@@ -41,7 +41,7 @@ class DtoValidationJsonTest {
     @Test
     void userDtoBlankNameShouldHaveViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "name": "   ",
                     "email": "john@example.com"
                 }
@@ -58,7 +58,7 @@ class DtoValidationJsonTest {
     @Test
     void userDtoInvalidEmailShouldHaveViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "name": "John",
                     "email": "not-an-email"
                 }
@@ -76,7 +76,7 @@ class DtoValidationJsonTest {
     @Test
     void itemDtoBlankNameShouldHaveViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "name": "",
                     "description": "Хорошая дрель",
                     "available": true
@@ -94,7 +94,7 @@ class DtoValidationJsonTest {
     @Test
     void itemDtoNullAvailableShouldHaveViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "name": "Дрель",
                     "description": "Мощная",
                     "available": null
@@ -113,7 +113,7 @@ class DtoValidationJsonTest {
     @Test
     void bookingCreateDtoEndNotInFutureShouldHaveViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "itemId": 1,
                     "start": "%s",
                     "end": "%s"
@@ -131,7 +131,7 @@ class DtoValidationJsonTest {
     @Test
     void bookingCreateDtoNullItemIdShouldHaveViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "itemId": null,
                     "start": "%s",
                     "end": "%s"
@@ -150,7 +150,7 @@ class DtoValidationJsonTest {
     @Test
     void validBookingCreateDtoShouldHaveNoViolationsTest() throws Exception {
         String json = """
-                {
+                    {
                     "itemId": 999,
                     "start": "%s",
                     "end": "%s"
