@@ -17,22 +17,30 @@ import ru.practicum.shareit.user.model.User;
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @Column(nullable = false)
+    @ToString.Include
     private String name;
 
     @Column(nullable = false, length = 1024)
+    @ToString.Include
     private String description;
 
     @Column(name = "is_available", nullable = false)
+    @ToString.Include
     private Boolean available;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
+    @ToString.Include(name = "ownerId")
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
+    @ToString.Include(name = "requestId")
     private ItemRequest request;
 }
+

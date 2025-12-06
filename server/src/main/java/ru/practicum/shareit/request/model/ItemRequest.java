@@ -18,15 +18,23 @@ import java.time.LocalDateTime;
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @Column(nullable = false, length = 1024)
+    @ToString.Include
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requestor_id", nullable = false)
+
+    @ToString.Include(name = "requestorId")
     private User requestor;
 
     @Column(nullable = false)
+    @ToString.Include
     private LocalDateTime created;
 }
+
+
